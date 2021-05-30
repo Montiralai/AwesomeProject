@@ -2,7 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-export default function Ex12() {
+export default function Ex12(navigation) {
   return (
     <View style={{flex:3 , flexDirection : 'row' }}>    
       <View style={{ backgroundColor : '#50E3C2' , flex : 1 }}></View>

@@ -2,7 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-export default function Ex10() {
+export default function Ex10(navigation) {
   return (
     <View style={{flex:1 }}>    
       

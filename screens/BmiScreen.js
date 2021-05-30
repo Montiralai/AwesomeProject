@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, View, TextInput, Button } from 'react-native';
 
 
-export default function Bmi() {    
+export default function BmiScreen({navigation}) {    
 
     
     const [weight , setWeight] = useState("70");
@@ -58,6 +58,14 @@ export default function Bmi() {
         <Text style={{ fontSize : 30 }}>BMI :{bmi}</Text>
         <Text style = {{fontSize : 35 }}>ThisBMI :{thisBMI}</Text>
         <Button title="Calculate" onPress={compute}  />
+
+        <View>                
+                <Button  
+                    onPress={() => navigation.navigate('NetworkScreen')}
+                    title="Next"
+                    color=""
+                    />
+            </View> 
    
     </View>
     );
