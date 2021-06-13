@@ -1,9 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { View, TouchableOpacity, FlatList, Text, LogBox } from 'react-native';
+import React, { useState, useEffect, useContext } from 'react';
+import { View, TouchableOpacity, FlatList, Text, LogBox, Modal, Image } from 'react-native';
 import TodoItem from '../components/TodoItem';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fb } from '../db_config';
+import ImageViewer from 'react-native-image-zoom-viewer';
+import * as FileSystem from 'expo-file-system';
+import * as MediaLibrary from 'expo-media-library';
+import { AuthContext, AuthContextProvider } from "../hooks/AuthContext";
 
 
 export default function TodoScreen({ navigation }) {
@@ -14,11 +18,17 @@ export default function TodoScreen({ navigation }) {
             { _id: '3', completed: false, title: "go to cinema @ 19.00" },
         ]
     );
+    const [user, setUser] = useContext(AuthContext);
     useEffect(() => {
         //โหลดข้อมูลจาก Async Storage (HD)
         // readTodos();
-        readTodosFirebase();
-        LogBox.ignoreLogs(['Setting a timer']);
+        if (user) {
+            LogBox.ignoreLogs(['Setting a timer']);
+            readTodosFirebase();
+
+        } else {
+            navigation.navigate('AuthLoginScreen');
+        }
     }, []);
 
     const readTodosFirebase = async () => {
@@ -39,9 +49,11 @@ export default function TodoScreen({ navigation }) {
             _id: '_' + Math.random().toString(36).substr(2, 9), //RANDOM NUMBER
             title: "", //Empty String
             completed: false,
+            user_id: user.uid,
         };
         //CLONE ARRAY
         let t = [...todos];
+
         //APPEND NEW DATA INTO ARRAY
         t.push(new_data);
         //UPDATE STATE
@@ -132,6 +144,7 @@ export default function TodoScreen({ navigation }) {
 
     const writeTodosFirebase = async (new_data) => {
         fb.firestore().collection("todos")
+            .where("user_id", "==", user.uid)
             .doc(new_data._id)
             .set(new_data)
             .then(function () {
@@ -141,6 +154,10 @@ export default function TodoScreen({ navigation }) {
                 console.error("Error writing document: ", error);
             });
     }
+
+    const [modalVisible, setModalVisible] = useState(false);
+    const [images, setImages] = useState([]);
+
 
 
 
@@ -159,6 +176,8 @@ export default function TodoScreen({ navigation }) {
                             onUpdate={onUpdate}
                             onCheck={onCheck}
                             onDelete={onDelete}
+                            setImages={setImages}
+                            setModalVisible={setModalVisible}
                         />
                     );
                 }
@@ -182,7 +201,40 @@ export default function TodoScreen({ navigation }) {
                 <Ionicons name='md-add' size={26} />
             </TouchableOpacity>
 
+            <Modal
+                visible={modalVisible}
+                transparent={true}
+                onRequestClose={() => { setModalVisible(false); }}
+            >
+                <ImageViewer imageUrls={images}
+                    enableSwipeDown={true}
+                    onCancel={() => { console.log("SwipeDown"); setModalVisible(false); }}
 
+                    onSave={(uri) => {
+                        console.log("TEXT : ", uri);
+                        //SPLIT STRING WITH "/" => ["file:",...,"ImagePicker","df2bbd81-da8c-4e3d-aa26-4b71686ea623.jpg"]
+                        //GET LAST ITEM IN ARRAY BY POP()
+                        //REMOVE ?xxxxxxx after filename
+                        //REMOVE %
+                        let filename = uri.split('/').pop().split('?')[0].replace("%", "");
+                        (async () => {
+                            try {
+                                const response = await FileSystem.downloadAsync(
+                                    uri,
+                                    FileSystem.documentDirectory + filename
+                                );
+                                console.log("response : ", response);
+                                //await saveToLibraryAsync(localUri);
+                                // const asset = await MediaLibrary.createAssetAsync(response.uri);
+                                const asset = await MediaLibrary.saveToLibraryAsync(response.uri);
+                                await MediaLibrary.createAlbumAsync("Downloads", asset, false);
+                            } catch (error) {
+                                console.error(error);
+                            }
+                        })();
+                    }}
+                />
+            </Modal>
         </View>
     );
 }

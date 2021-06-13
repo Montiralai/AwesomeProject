@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TextInput, TouchableOpacity } from 'react-native';
+import { View, TextInput, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function TodoItem(props) {
@@ -32,6 +32,20 @@ export default function TodoItem(props) {
                 <Ionicons name="md-trash"
                     size={23} />
             </TouchableOpacity>
+
+            <TouchableOpacity style={{ flex: 3, alignItems: 'center' }}
+                onPress={() => {
+                    console.log("Pressed");
+                    let images = [
+                        { url: props.item.title, props: {} }
+                    ];
+                    props.setImages(images);
+                    props.setModalVisible(true);
+                }}
+            >
+                <Image source={{ uri: props.item.title }} style={{ width: 40, height: 40 }} resizeMode="cover" />
+            </TouchableOpacity>
+
         </View>
     );
 }
